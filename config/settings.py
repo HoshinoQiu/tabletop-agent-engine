@@ -68,6 +68,7 @@ class Settings(BaseSettings):
     CHILD_CHUNK_SIZE: int = 200
     PARENT_CHUNK_SIZE: int = 1000
     ENABLE_PARENT_CHILD: bool = False
+    INGEST_BATCH_SIZE: int = 8
 
     # Session
     SESSION_TTL_SECONDS: int = 3600

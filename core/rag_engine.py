@@ -44,9 +44,11 @@ class RAGEngine:
         logger.info("RAG engine initialized successfully")
 
     def ingest_document(self, text: str, metadata: Dict[str, Any] = None,
-                        batch_size: int = 32) -> int:
+                        batch_size: int = 0) -> int:
         """Ingest a document: chunk, embed in batches, and store."""
         logger.info("Ingesting document into vector store")
+        batch_size = int(batch_size or settings.INGEST_BATCH_SIZE or 8)
+        batch_size = max(1, batch_size)
         chunks = self._chunk_text(text, metadata)
         logger.info(f"Generated {len(chunks)} chunks before filtering")
 

@@ -55,17 +55,25 @@ class DocumentManager:
             "chunk_count": 0,
             "status": "processing",
             "file_size": file_size,
+            "error_message": "",
         }
         self._save_meta()
         logger.info(f"Registered document: {filename} (ID: {doc_id})")
         return doc_id
 
-    def update_status(self, doc_id: str, status: str, chunk_count: int = 0):
+    def update_status(
+        self,
+        doc_id: str,
+        status: str,
+        chunk_count: int = 0,
+        error_message: str = "",
+    ):
         """Update document processing status."""
         if doc_id in self.documents:
             self.documents[doc_id]["status"] = status
             if chunk_count:
                 self.documents[doc_id]["chunk_count"] = chunk_count
+            self.documents[doc_id]["error_message"] = error_message or ""
             self._save_meta()
 
     def get_document(self, doc_id: str) -> Optional[dict]:

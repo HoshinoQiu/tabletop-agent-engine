@@ -151,6 +151,9 @@ async def health_check():
             "reranker": settings.RERANKER_ENABLED,
             "cache_enabled": settings.CACHE_ENABLED,
             "faiss_index_type": settings.FAISS_INDEX_TYPE,
+            "embedding_backend": settings.EMBEDDING_BACKEND,
+            "embedding_model": settings.EMBEDDING_MODEL,
+            "ingest_batch_size": settings.INGEST_BATCH_SIZE,
         },
     }
 
@@ -331,7 +334,9 @@ def _process_document_background(doc_id: str, file_path: str):
         if text and len(text) > 50:
             logger.info(f"[{doc_id}] Extracted {len(text)} chars, starting embedding...")
             chunks_count = rag_engine.ingest_document(
-                text, metadata={"source": file_path, "document_name": Path(file_path).name}
+                text,
+                metadata={"source": file_path, "document_name": Path(file_path).name},
+                batch_size=settings.INGEST_BATCH_SIZE,
             )
             rag_engine.vector_store.save()
             _refresh_game_source_map()
@@ -339,13 +344,18 @@ def _process_document_background(doc_id: str, file_path: str):
             document_manager.update_status(doc_id, "ready", chunks_count)
             logger.info(f"[{doc_id}] Done: {chunks_count} chunks in {elapsed:.1f}s")
         else:
-            document_manager.update_status(doc_id, "error")
+            message = (
+                "PDF appears to be scanned images (OCR required)"
+                if ext == ".pdf"
+                else f"insufficient text extracted ({len(text or '')} chars)"
+            )
+            document_manager.update_status(doc_id, "error", error_message=message)
             if ext == ".pdf":
                 logger.error(f"[{doc_id}] Failed: PDF appears to be scanned images (no extractable text). OCR is required.")
             else:
                 logger.error(f"[{doc_id}] Failed: insufficient text extracted ({len(text or '')} chars)")
     except Exception as e:
-        document_manager.update_status(doc_id, "error")
+        document_manager.update_status(doc_id, "error", error_message=str(e))
         logger.error(f"[{doc_id}] Processing failed: {e}")
         import traceback
         traceback.print_exc()
