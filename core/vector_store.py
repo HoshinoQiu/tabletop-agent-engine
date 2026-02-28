@@ -160,11 +160,23 @@ class VectorStore:
         logger.info(f"Adding {len(embeddings)} embeddings to vector store")
 
         embeddings_array = np.array(embeddings, dtype="float32", copy=False)
-        if embeddings_array.ndim != 2 or embeddings_array.shape[1] != self.embedding_dimension:
-            raise ValueError(
-                f"Invalid embedding shape {embeddings_array.shape}, "
-                f"expected (*, {self.embedding_dimension})"
-            )
+        if embeddings_array.ndim != 2:
+            raise ValueError(f"Invalid embedding shape {embeddings_array.shape}")
+        if embeddings_array.shape[1] != self.embedding_dimension:
+            if self.index.ntotal == 0 and not self.documents:
+                new_dim = int(embeddings_array.shape[1])
+                logger.warning(
+                    "Embedding dimension mismatch on empty store "
+                    f"({self.embedding_dimension} -> {new_dim}), rebuilding index"
+                )
+                self.embedding_dimension = new_dim
+                self.index = self._create_index("flat", vector_count=0)
+                self.vectors = np.empty((0, self.embedding_dimension), dtype="float32")
+            else:
+                raise ValueError(
+                    f"Invalid embedding shape {embeddings_array.shape}, "
+                    f"expected (*, {self.embedding_dimension})"
+                )
 
         faiss.normalize_L2(embeddings_array)
         new_vectors = (

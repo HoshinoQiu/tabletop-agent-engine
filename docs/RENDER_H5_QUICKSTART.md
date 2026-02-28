@@ -20,6 +20,10 @@
 
 1. `LLM_PROVIDER=zhipuai`
 2. `ZHIPU_API_KEY=你的密钥`
+3. `EMBEDDING_BACKEND=api`
+4. `EMBEDDING_PROVIDER=zhipuai`
+5. `EMBEDDING_MODEL=embedding-3`
+6. `RERANKER_ENABLED=false`（免费实例建议先关）
 
 如果你用 OpenAI：
 

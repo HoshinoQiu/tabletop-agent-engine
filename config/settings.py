@@ -13,6 +13,14 @@ class Settings(BaseSettings):
     # - 英文文档: "sentence-transformers/all-MiniLM-L6-v2"
     # - 中英混合: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" (推荐)
     EMBEDDING_MODEL: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    # Embedding backend:
+    # - local: load sentence-transformers locally (higher memory usage)
+    # - api: call cloud embedding API (Render free recommended)
+    EMBEDDING_BACKEND: str = "local"  # local | api
+    # Embedding provider when EMBEDDING_BACKEND=api
+    EMBEDDING_PROVIDER: str = "zhipuai"  # zhipuai | openai
+    EMBEDDING_DIMENSION: int = 0  # 0 = auto detect via probe
+    EMBEDDING_API_BATCH_SIZE: int = 16
     VECTOR_STORE_PATH: str = "data/vector_store"
     FAISS_INDEX_TYPE: str = "flat"  # flat | ivf | hnsw
     FAISS_UPGRADE_MIN_VECTORS: int = 2000
