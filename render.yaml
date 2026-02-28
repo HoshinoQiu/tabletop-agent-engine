@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: tabletop-agent-engine
+    plan: free
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.14
+      - key: DEBUG
+        value: "false"
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: HYBRID_SEARCH_ENABLED
+        value: "true"
+      - key: VECTOR_WEIGHT
+        value: "0.65"
+      - key: BM25_WEIGHT
+        value: "0.35"
+      - key: RERANKER_ENABLED
+        value: "true"
+      - key: RERANKER_CANDIDATES
+        value: "8"

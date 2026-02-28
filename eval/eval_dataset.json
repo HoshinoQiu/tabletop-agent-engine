@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "description": "Evaluation dataset for tabletop game rules Q&A system",
+  "questions": [
+    {"id": 1, "query": "游戏怎么获胜？", "expected_keywords": ["胜利", "获胜", "赢", "win"], "category": "victory"},
+    {"id": 2, "query": "回合有哪些阶段？", "expected_keywords": ["阶段", "phase", "回合"], "category": "turn_structure"},
+    {"id": 3, "query": "手牌上限是多少？", "expected_keywords": ["手牌", "上限", "hand"], "category": "hand_limit"},
+    {"id": 4, "query": "如何发动攻击？", "expected_keywords": ["攻击", "attack", "combat"], "category": "combat"},
+    {"id": 5, "query": "How do I win the game?", "expected_keywords": ["win", "victory", "胜利"], "category": "victory"},
+    {"id": 6, "query": "What are the turn phases?", "expected_keywords": ["phase", "turn", "阶段"], "category": "turn_structure"},
+    {"id": 7, "query": "游戏开始时怎么设置？", "expected_keywords": ["设置", "setup", "准备", "开始"], "category": "setup"},
+    {"id": 8, "query": "可以同时攻击多个目标吗？", "expected_keywords": ["攻击", "目标", "多个"], "category": "combat"},
+    {"id": 9, "query": "弃牌堆的牌可以重新使用吗？", "expected_keywords": ["弃牌", "discard", "重新"], "category": "discard"},
+    {"id": 10, "query": "每回合可以抽几张牌？", "expected_keywords": ["抽牌", "draw", "回合"], "category": "draw"},
+    {"id": 11, "query": "游戏支持几个玩家？", "expected_keywords": ["玩家", "player", "人数"], "category": "player_count"},
+    {"id": 12, "query": "有哪些特殊卡牌？", "expected_keywords": ["特殊", "卡牌", "card"], "category": "special_cards"},
+    {"id": 13, "query": "游戏大概需要多长时间？", "expected_keywords": ["时间", "time", "分钟"], "category": "game_duration"},
+    {"id": 14, "query": "什么是资源？怎么获取？", "expected_keywords": ["资源", "resource", "获取"], "category": "resources"},
+    {"id": 15, "query": "防御怎么计算？", "expected_keywords": ["防御", "defense", "计算"], "category": "defense"},
+    {"id": 16, "query": "SETI游戏的规则是什么？", "expected_keywords": ["SETI", "规则", "rule"], "category": "specific_game"},
+    {"id": 17, "query": "弑君者怎么玩？", "expected_keywords": ["弑君", "规则", "玩法"], "category": "specific_game"},
+    {"id": 18, "query": "游戏中有哪些角色？", "expected_keywords": ["角色", "character", "role"], "category": "characters"},
+    {"id": 19, "query": "合作模式怎么玩？", "expected_keywords": ["合作", "cooperative", "co-op"], "category": "game_mode"},
+    {"id": 20, "query": "What happens when the deck runs out?", "expected_keywords": ["deck", "牌堆", "empty", "用完"], "category": "deck_rules"},
+    {"id": 21, "query": "移动规则是什么？", "expected_keywords": ["移动", "move", "movement"], "category": "movement"},
+    {"id": 22, "query": "游戏有哪些扩展包？", "expected_keywords": ["扩展", "expansion", "DLC"], "category": "expansions"},
+    {"id": 23, "query": "先手玩家怎么确定？", "expected_keywords": ["先手", "first", "starting"], "category": "first_player"},
+    {"id": 24, "query": "技能卡怎么使用？", "expected_keywords": ["技能", "skill", "ability"], "category": "skills"},
+    {"id": 25, "query": "分数怎么计算？", "expected_keywords": ["分数", "score", "points"], "category": "scoring"}
+  ]
+}

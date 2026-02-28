@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  tabletop-agent:
+    build: .
+    container_name: tabletop-agent
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DEBUG=false
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: tabletop-caddy
+    restart: unless-stopped
+    depends_on:
+      - tabletop-agent
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

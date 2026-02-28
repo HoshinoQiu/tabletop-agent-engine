@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桌游规则问答助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #ec4899;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #475569;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            padding: clamp(8px, 2vw, 18px);
+            background-image:
+                radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            background: var(--bg-card);
+            border-radius: 22px;
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+            width: 100%;
+            max-width: 860px;
+            min-height: calc(100vh - 2 * clamp(8px, 2vw, 18px));
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- PLACEHOLDER_STYLES --- */
+        .header {
+            background: var(--gradient-1);
+            padding: 26px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 32px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 15px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .chat-area {
+            flex: 1;
+            min-height: 340px;
+            max-height: 58vh;
+            overflow-y: auto;
+            padding: 18px;
+            background: var(--bg-dark);
+            scroll-behavior: smooth;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.bot {
+            align-items: flex-start;
+        }
+
+        .message-wrapper {
+            max-width: 85%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .message.user .avatar {
+            background: var(--gradient-2);
+        }
+
+        .message.bot .avatar {
+            background: var(--gradient-1);
+        }
+
+        .message-content {
+            padding: 16px 20px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-content {
+            background: var(--gradient-1);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.bot .message-content {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 6px;
+        }
+
+        .message.bot .message-content.markdown-body {
+            white-space: normal;
+        }
+
+        .message.bot .message-content.markdown-body p {
+            margin: 0 0 0.6em 0;
+        }
+
+        .message.bot .message-content.markdown-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.bot .message-content.markdown-body h1,
+        .message.bot .message-content.markdown-body h2,
+        .message.bot .message-content.markdown-body h3 {
+            margin: 0.8em 0 0.4em 0;
+            font-weight: 600;
+            color: var(--primary-light);
+        }
+
+        .message.bot .message-content.markdown-body h1 {
+            font-size: 1.3em;
+        }
+
+        .message.bot .message-content.markdown-body h2 {
+            font-size: 1.15em;
+        }
+
+        .message.bot .message-content.markdown-body h3 {
+            font-size: 1.05em;
+        }
+
+        .message.bot .message-content.markdown-body ul,
+        .message.bot .message-content.markdown-body ol {
+            margin: 0.4em 0;
+            padding-left: 1.5em;
+        }
+
+        .message.bot .message-content.markdown-body li {
+            margin-bottom: 0.3em;
+        }
+
+        .message.bot .message-content.markdown-body code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .message.bot .message-content.markdown-body pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 0.5em 0;
+        }
+
+        .message.bot .message-content.markdown-body pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .message.bot .message-content.markdown-body strong {
+            color: #e2e8f0;
+        }
+
+        .message.bot .message-content.markdown-body blockquote {
+            border-left: 3px solid var(--primary);
+            padding-left: 12px;
+            margin: 0.5em 0;
+            color: var(--text-secondary);
+        }
+
+        .message.bot .message-content.markdown-body table {
+            border-collapse: collapse;
+            margin: 0.5em 0;
+            width: 100%;
+        }
+
+        .message.bot .message-content.markdown-body th,
+        .message.bot .message-content.markdown-body td {
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            text-align: left;
+        }
+
+        .message.bot .message-content.markdown-body th {
+            background: rgba(99, 102, 241, 0.15);
+            font-weight: 600;
+        }
+
+        .thought-toggle {
+            margin-top: 12px;
+            padding: 10px 16px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--primary-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .thought-toggle:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .thought-toggle svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s;
+        }
+
+        .thought-toggle.active svg {
+            transform: rotate(180deg);
+        }
+
+        .thought-chain {
+            margin-top: 12px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid var(--border);
+        }
+
+        .thought-chain.show {
+            display: block;
+        }
+
+        .thought-item {
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--primary);
+        }
+
+        .thought-role {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            color: var(--primary-light);
+        }
+
+        .thought-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .citations {
+            margin-top: 12px;
+        }
+
+        .citation-card {
+            padding: 10px 14px;
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .citation-card:hover {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .citation-label {
+            color: var(--success);
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .input-area {
+            padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+            background: rgba(30, 41, 59, 0.95);
+            border-top: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            bottom: 0;
+            z-index: 5;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 8px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .mode-btn.active {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .mode-desc {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        #question-input {
+            flex: 1;
+            padding: 16px 24px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 15px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        #question-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        #question-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        #send-btn {
+            padding: 16px 32px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        #send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        #send-btn:disabled {
+            background: var(--bg-input);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        #send-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .examples {
+            padding: 20px 24px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid var(--border);
+        }
+
+        .examples-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .example-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .example-btn {
+            padding: 10px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .example-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+            background: rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .games-panel {
+            padding: 18px 24px;
+            background: rgba(0, 0, 0, 0.16);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .games-strip {
+            padding: 10px 16px;
+            background: rgba(99, 102, 241, 0.08);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .games-strip-label {
+            color: var(--primary-light);
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .games-strip-list {
+            display: flex;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+
+        .games-panel-title {
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .games-panel-note {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .games-panel-actions {
+            margin-top: 10px;
+        }
+
+        .games-open-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 12px;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .games-open-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .game-chip {
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            color: var(--text-primary);
+            border-radius: 999px;
+            font-size: 12px;
+            padding: 6px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .games-empty {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .library-fab {
+            position: fixed;
+            right: 24px;
+            bottom: calc(16px + env(safe-area-inset-bottom));
+            z-index: 999;
+            background: var(--gradient-1);
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            font-family: inherit;
+        }
+
+        .library-fab:hover {
+            transform: translateY(-1px);
+        }
+
+        .games-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .games-modal.show {
+            display: flex;
+        }
+
+        .games-modal-card {
+            width: min(760px, 100%);
+            max-height: 80vh;
+            overflow: auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .games-modal-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .games-modal-title {
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .games-modal-close {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .games-modal-body {
+            padding: 12px 16px 16px;
+        }
+
+        .games-modal-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .games-modal-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .games-modal-name {
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .games-modal-meta {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-1);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+        }
+
+        .welcome-message h3 {
+            color: var(--text-primary);
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .welcome-message p {
+            font-size: 15px;
+            line-height: 1.6;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text span {
+            animation: blink 1.4s infinite;
+        }
+
+        .loading-text span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-text span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .stream-status {
+            font-size: 12px;
+            color: var(--warning);
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .stream-status.active {
+            display: inline-block;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                border-radius: 0;
+                min-height: 100vh;
+                border: none;
+            }
+
+            .header {
+                padding: 24px 16px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .chat-area {
+                min-height: 300px;
+                max-height: none;
+                padding: 16px;
+            }
+
+            .message-wrapper {
+                max-width: 90%;
+            }
+
+            .input-area {
+                padding: 16px;
+            }
+
+            .input-wrapper {
+                flex-direction: column;
+            }
+
+            #question-input {
+                width: 100%;
+            }
+
+            #send-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .library-fab {
+                right: 12px;
+                bottom: calc(12px + env(safe-area-inset-bottom));
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- PLACEHOLDER_HTML -->
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">🎲</div>
+                <h1>桌游规则智能搜索</h1>
+                <p>RAG v1.0</p>
+                <div class="status-bar">
+                    <div class="status-item"><span class="status-dot"></span><span>服务运行中</span></div>
+                    <div class="status-item"><span>🔍</span><span>混合检索</span></div>
+                    <div class="status-item"><span>🤖</span><span>智能问答</span></div>
+                    <div class="status-item" id="game-count-pill"><span>🎲</span><span>已收录 0 款桌游</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="games-strip">
+            <div class="games-strip-label">已收录桌游</div>
+            <div class="games-strip-list" id="games-list-top">
+                <span class="games-empty">加载中...</span>
+            </div>
+        </div>
+        <div class="chat-area" id="chat-area">
+            <div class="welcome-message">
+                <div class="welcome-icon">🎯</div>
+                <h3>欢迎使用</h3>
+                <p>在下方输入框中输入你的规则问题，AI 会从规则书中检索相关内容并给出准确答案</p>
+            </div>
+        </div>
+        <div class="examples">
+            <div class="examples-title">快速提问</div>
+            <div class="example-buttons">
+                <button class="example-btn" onclick="askExample(this)">游戏怎么获胜？</button>
+                <button class="example-btn" onclick="askExample(this)">回合有哪些阶段？</button>
+                <button class="example-btn" onclick="askExample(this)">手牌上限是多少？</button>
+                <button class="example-btn" onclick="askExample(this)">如何发动攻击？</button>
+            </div>
+        </div>
+        <div class="games-panel">
+            <div class="games-panel-title">已收录桌游（避免空问）</div>
+            <div class="games-panel-note">问桌游规则之前可以先看看规则书清单才提问，避免空问。</div>
+            <div class="games-panel-actions">
+                <button class="games-open-btn" onclick="openGamesModal()">查看规则书清单</button>
+            </div>
+        </div>
+        <div class="input-area">
+            <div class="mode-toggle">
+                <button class="mode-btn" onclick="setMode('stream', this)">流式检索（过程可见）</button>
+                <button class="mode-btn active" onclick="setMode('normal', this)">快速回答</button>
+            </div>
+            <div class="mode-desc" id="mode-desc">快速回答：一次返回最终答案，不展示检索过程。</div>
+            <div class="input-wrapper">
+                <input type="text" id="question-input" placeholder="输入你的规则问题..." onkeypress="handleKeyPress(event)"
+                    autocomplete="off">
+                <button id="send-btn" onclick="sendQuestion()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                    </svg>
+                    发送
+                </button>
+            </div>
+        </div>
+    </div>
+    <button class="library-fab" onclick="openGamesModal()">规则书清单</button>
+    <div class="games-modal" id="games-modal" onclick="onGamesModalBackdrop(event)">
+        <div class="games-modal-card">
+            <div class="games-modal-header">
+                <div class="games-modal-title">已录入桌游规则书</div>
+                <button class="games-modal-close" onclick="closeGamesModal()">关闭</button>
+            </div>
+            <div class="games-modal-body">
+                <div class="games-modal-list" id="games-modal-list">
+                    <div class="games-empty">正在加载...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // PLACEHOLDER_JS
+        const chatArea = document.getElementById('chat-area');
+        const questionInput = document.getElementById('question-input');
+        const sendBtn = document.getElementById('send-btn');
+        const modeDesc = document.getElementById('mode-desc');
+        const gamesListTop = document.getElementById('games-list-top');
+        const gameCountPill = document.getElementById('game-count-pill');
+        const gamesModal = document.getElementById('games-modal');
+        const gamesModalList = document.getElementById('games-modal-list');
+        let isFirstMessage = true;
+        let sessionId = null;
+        let currentMode = 'normal';
+        let latestGames = [];
+        const MODE_DESCRIPTIONS = {
+            stream: '流式检索：实时显示检索/分析状态，适合需要看过程时使用。',
+            normal: '快速回答：一次返回最终答案，不展示检索过程。',
+        };
+
+        function updateModeDescription() {
+            if (!modeDesc) return;
+            modeDesc.textContent = MODE_DESCRIPTIONS[currentMode] || '';
+        }
+
+        function setMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateModeDescription();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !sendBtn.disabled) sendQuestion();
+        }
+
+        function askExample(btn) {
+            questionInput.value = btn.textContent;
+            sendQuestion();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatGameName(name) {
+            const clean = (name || '').trim();
+            if (!clean) return '未知桌游';
+            return clean.replace(/\s+/g, ' ');
+        }
+
+        function guessGameNameFromFilename(filename) {
+            let name = (filename || '').trim();
+            if (!name) return '未知桌游';
+            name = name.replace(/\.[^/.]+$/, '');
+            name = name.replace(/[_\-]+/g, ' ');
+            name = name.replace(/\b(rulebook|rules?|manual|official|english|中文版|中文|v\d+|ver\d+)\b/ig, ' ');
+            name = name.replace(/\s+/g, ' ').trim();
+            return formatGameName(name || '未知桌游');
+        }
+
+        function buildGamesFromDocuments(docs) {
+            const byName = new Map();
+            (docs || []).forEach(doc => {
+                const gameName = guessGameNameFromFilename(doc.filename);
+                if (!byName.has(gameName)) {
+                    byName.set(gameName, new Set());
+                }
+                byName.get(gameName).add(doc.filename || '');
+            });
+            return Array.from(byName.entries())
+                .map(([game_name, files]) => ({ game_name, document_count: files.size }))
+                .sort((a, b) => b.document_count - a.document_count || a.game_name.localeCompare(b.game_name));
+        }
+
+        function renderGamesModal(items) {
+            if (!gamesModalList) return;
+            if (!items || items.length === 0) {
+                gamesModalList.innerHTML = '<div class="games-empty">当前没有已录入的桌游规则书。</div>';
+                return;
+            }
+
+            gamesModalList.innerHTML = items.map(g => {
+                const name = escapeHtml(formatGameName(g.display_name || g.game_name));
+                const docs = Number.isFinite(g.document_count) ? g.document_count : 0;
+                const docsText = Array.isArray(g.documents) && g.documents.length > 0
+                    ? ` · ${g.documents.length} 个文件`
+                    : '';
+                return `<div class="games-modal-item">
+                    <div class="games-modal-name">${name}</div>
+                    <div class="games-modal-meta">${docs} 条规则来源${docsText}</div>
+                </div>`;
+            }).join('');
+        }
+
+        async function openGamesModal() {
+            if (gamesModal) gamesModal.classList.add('show');
+            if (latestGames.length === 0) {
+                await loadGames();
+            } else {
+                renderGamesModal(latestGames);
+            }
+        }
+
+        function closeGamesModal() {
+            if (gamesModal) gamesModal.classList.remove('show');
+        }
+
+        function onGamesModalBackdrop(event) {
+            if (event.target === gamesModal) closeGamesModal();
+        }
+
+        async function loadGames() {
+            if (!gamesListTop && !gamesModalList && !gameCountPill) return;
+
+            try {
+                let gamesData = null;
+                try {
+                    const resp = await fetch('/api/games');
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    gamesData = await resp.json();
+                } catch (e) {
+                    try {
+                        const resp2 = await fetch('http://127.0.0.1:8000/api/games');
+                        if (!resp2.ok) throw new Error(`HTTP ${resp2.status}`);
+                        gamesData = await resp2.json();
+                    } catch (e2) {
+                        try {
+                            const docsResp = await fetch('/api/documents');
+                            if (!docsResp.ok) throw new Error(`HTTP ${docsResp.status}`);
+                            const docsData = await docsResp.json();
+                            const inferred = buildGamesFromDocuments(docsData.documents || []);
+                            gamesData = { count: inferred.length, games: inferred };
+                        } catch (e3) {
+                            const docsResp2 = await fetch('http://127.0.0.1:8000/api/documents');
+                            if (!docsResp2.ok) throw new Error(`HTTP ${docsResp2.status}`);
+                            const docsData2 = await docsResp2.json();
+                            const inferred2 = buildGamesFromDocuments(docsData2.documents || []);
+                            gamesData = { count: inferred2.length, games: inferred2 };
+                        }
+                    }
+                }
+
+                const items = gamesData.games || [];
+                const count = Number.isFinite(gamesData.count) ? gamesData.count : items.length;
+                latestGames = items;
+
+                if (gameCountPill) {
+                    gameCountPill.innerHTML = `<span>🎲</span><span>已收录 ${count} 款桌游</span>`;
+                }
+
+                if (items.length === 0) {
+                    if (gamesListTop) {
+                        gamesListTop.innerHTML = '<span class="games-empty">暂无</span>';
+                    }
+                    renderGamesModal([]);
+                    return;
+                }
+
+                if (gamesListTop) {
+                    gamesListTop.innerHTML = items.slice(0, 12).map(g => {
+                        const name = escapeHtml(formatGameName(g.display_name || g.game_name));
+                        return `<span class="game-chip">${name}</span>`;
+                    }).join('');
+                }
+                renderGamesModal(items);
+            } catch (e) {
+                if (gameCountPill) {
+                    gameCountPill.innerHTML = '<span>🎲</span><span>桌游列表加载失败</span>';
+                }
+                if (gamesListTop) gamesListTop.innerHTML = '<span class="games-empty">加载失败</span>';
+                latestGames = [];
+                renderGamesModal([]);
+            }
+        }
+
+        function renderMarkdown(text) {
+            if (typeof marked !== 'undefined') {
+                marked.setOptions({ breaks: true, gfm: true });
+                return marked.parse(text);
+            }
+            return escapeHtml(text);
+        }
+
+        function addMessage(content, isUser, thoughtChain = null, citations = null) {
+            if (isFirstMessage) { chatArea.innerHTML = ''; isFirstMessage = false; }
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            const chainId = 'chain-' + Date.now();
+
+            let thoughtHtml = '';
+            if (!isUser && thoughtChain && thoughtChain.length > 0) {
+                thoughtHtml = `
+                    <button class="thought-toggle" onclick="toggleThought('${chainId}', this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                        查看 AI 思考过程
+                    </button>
+                    <div class="thought-chain" id="${chainId}">${formatThoughtChain(thoughtChain)}</div>`;
+            }
+
+            let citationHtml = '';
+            if (!isUser && citations && citations.length > 0) {
+                citationHtml = '<div class="citations">';
+                citations.forEach((c, i) => {
+                    const name = c.document_name || c.documentName || '';
+                    const page = c.page_number || c.pageNumber || 0;
+                    const section = c.section_title || c.sectionTitle || '';
+                    const score = (c.relevance_score || c.relevanceScore || 0).toFixed(3);
+                    citationHtml += `<div class="citation-card"><span class="citation-label">[${i + 1}]</span>${escapeHtml(name)}${page ? ' - 第' + page + '页' : ''}${section ? ' - ' + escapeHtml(section) : ''} (${score})</div>`;
+                });
+                citationHtml += '</div>';
+            }
+
+            messageDiv.innerHTML = `
+                <div class="message-wrapper">
+                    <span class="message-label"><span class="avatar">${isUser ? '👤' : '🤖'}</span>${isUser ? '你' : 'AI 助手'}</span>
+                    <div class="message-content${isUser ? '' : ' markdown-body'}">${isUser ? escapeHtml(content) : renderMarkdown(content)}</div>
+                    ${thoughtHtml}${citationHtml}
+                </div>`;
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return messageDiv;
+        }
+
+        // --- PLACEHOLDER_JS2 ---
+        function formatThoughtChain(chain) {
+            return chain.map(msg => {
+                const roleLabels = { 'system': '系统提示', 'assistant': 'AI 思考', 'user': '观察结果' };
+                const role = roleLabels[msg.role] || msg.role;
+                return `<div class="thought-item"><div class="thought-role">${role}</div><div class="thought-content">${escapeHtml(msg.content || '')}</div></div>`;
+            }).join('');
+        }
+
+        function toggleThought(id, btn) {
+            document.getElementById(id).classList.toggle('show');
+            btn.classList.toggle('active');
+        }
+
+        function addLoading(text = '正在思考中') {
+            if (isFirstMessage) { chatArea.innerHTML = ''; isFirstMessage = false; }
+            const div = document.createElement('div');
+            div.className = 'message bot'; div.id = 'loading-message';
+            div.innerHTML = `<div class="message-wrapper"><span class="message-label"><span class="avatar">🤖</span>AI 助手</span><div class="loading"><div class="loading-spinner"></div><div class="loading-text">${escapeHtml(text)}<span>.</span><span>.</span><span>.</span></div></div></div>`;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function removeLoading() {
+            const el = document.getElementById('loading-message');
+            if (el) el.remove();
+        }
+
+        async function sendQuestion() {
+            const question = questionInput.value.trim();
+            if (!question) return;
+            addMessage(question, true);
+            questionInput.value = '';
+            sendBtn.disabled = true;
+            questionInput.disabled = true;
+
+            if (currentMode === 'stream') {
+                await sendStream(question);
+            } else {
+                await sendNormal(question);
+            }
+
+            sendBtn.disabled = false;
+            questionInput.disabled = false;
+            questionInput.focus();
+        }
+
+        async function sendNormal(question) {
+            addLoading('正在生成最终答案');
+            try {
+                const body = { query: question };
+                if (sessionId) body.session_id = sessionId;
+                const resp = await fetch('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                removeLoading();
+                if (data.session_id) sessionId = data.session_id;
+                if (data.status === 'success') {
+                    addMessage(data.answer || '未返回有效答案。', false);
+                } else {
+                    addMessage(data.answer || '抱歉，处理问题时出现了错误。', false);
+                }
+            } catch (e) {
+                removeLoading();
+                addMessage('网络连接出错，请检查服务是否正常运行。', false);
+            }
+        }
+
+        async function sendStream(question) {
+            if (isFirstMessage) { chatArea.innerHTML = ''; isFirstMessage = false; }
+            // Create bot message placeholder with unique refs (no fixed IDs)
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message bot';
+            msgDiv.innerHTML = `<div class="message-wrapper"><span class="message-label"><span class="avatar">🤖</span>AI 助手</span><div class="message-content markdown-body"><div class="loading"><div class="loading-spinner"></div><div class="loading-text">正在思考中<span>.</span><span>.</span><span>.</span></div></div></div><div class="stream-status active">思考中...</div><div class="citations"></div></div>`;
+            chatArea.appendChild(msgDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            // Use DOM traversal instead of getElementById to avoid ID collisions
+            const wrapper = msgDiv.querySelector('.message-wrapper');
+            const contentEl = wrapper.querySelector('.message-content');
+            const statusEl = wrapper.querySelector('.stream-status');
+            const citationsEl = wrapper.querySelector('.citations');
+            let answer = '';
+            const citations = [];
+
+            try {
+                const body = { query: question, game_state: { hand_cards: 0, phase: "playing", other_info: {} } };
+                if (sessionId) body.session_id = sessionId;
+                const resp = await fetch('/api/query/stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let currentEvent = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (line.startsWith('event: ')) {
+                            currentEvent = line.slice(7).trim();
+                            continue;
+                        }
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.slice(6);
+                            try {
+                                const raw = JSON.parse(dataStr);
+                                // Handle session info
+                                if (raw && raw.session_id) { sessionId = raw.session_id; currentEvent = ''; continue; }
+
+                                if (currentEvent === 'answer' && typeof raw === 'string') {
+                                    answer = raw;
+                                    contentEl.innerHTML = renderMarkdown(answer);
+                                    statusEl.textContent = '回答完成';
+                                } else if (currentEvent === 'thought') {
+                                    statusEl.textContent = '思考中...';
+                                } else if (currentEvent === 'action') {
+                                    if (raw && raw.action) {
+                                        statusEl.textContent = `检索: ${raw.input || raw.action}`;
+                                    }
+                                } else if (currentEvent === 'observation') {
+                                    statusEl.textContent = '分析规则中...';
+                                } else if (currentEvent === 'citation') {
+                                    if (raw && raw.document_name !== undefined) {
+                                        citations.push(raw);
+                                        const i = citations.length;
+                                        const name = raw.document_name || '';
+                                        const page = raw.page_number || 0;
+                                        const section = raw.section_title || '';
+                                        const score = (raw.relevance_score || 0).toFixed(3);
+                                        citationsEl.innerHTML += `<div class="citation-card"><span class="citation-label">[${i}]</span>${escapeHtml(name)}${page ? ' - 第' + page + '页' : ''}${section ? ' - ' + escapeHtml(section) : ''} (${score})</div>`;
+                                    }
+                                } else if (currentEvent === 'done') {
+                                    // Stream complete
+                                }
+                            } catch (e) {
+                                // Ignore parse errors
+                            }
+                            currentEvent = '';
+                        }
+                    }
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                }
+            } catch (e) {
+                contentEl.innerHTML = answer ? renderMarkdown(answer) : escapeHtml('网络连接出错。');
+            }
+
+            statusEl.classList.remove('active');
+            if (!answer) contentEl.innerHTML = escapeHtml('未能获取回答。');
+        }
+
+        window.addEventListener('load', () => {
+            questionInput.focus();
+            updateModeDescription();
+            loadGames();
+        });
+    </script>
+</body>
+
+</html>
